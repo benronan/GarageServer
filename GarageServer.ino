@@ -1,10 +1,11 @@
 
 #include <GarageServer.h>
-
+#include <WiFiUdp.h>
 
 //global variables
-String BSSID = "WeMOS_Garage";
+String BSSID = "Garage";
 String Networks[][2] = {
+  {"Pcola_Heazy", "pensacola"}
 };
 
 
@@ -22,13 +23,14 @@ void setup() {
 void loop() {
   delay(10);
   server->HandleClient();
+  broadcast();
 }
 
 void InitServer() {
   Serial.println("InitServer()");
 
   server =  new GarageServer();
-  server->Initialize(D1);
+  server->Initialize(D1,D4);
   
   //register callback events
   Serial.println("registering callback events");
@@ -85,3 +87,43 @@ void OnIpAssigned(IPAddress ip){
   Serial.println("Local IP Address: " + ipToString(ip));
 };
 
+//Check if header is present and correct
+/*
+bool is_authenticated(){
+  Serial.println("Enter is_authenticated");
+  if (server.hasHeader("Cookie")){
+    Serial.print("Found cookie: ");
+    String cookie = server.header("Cookie");
+    Serial.println(cookie);
+    if (cookie.indexOf("ESPSESSIONID=1") != -1) {
+      Serial.println("Authenticated Successful");
+      return true;
+    }
+  }
+  Serial.println("Authenticated Failed");
+  return false;
+}
+*/
+WiFiUDP udp;
+long lastBroadcastTime = 0;
+long broadcastDelay = 10000;
+void broadcast() {
+  long currentTime = millis();
+  if(lastBroadcastTime + broadcastDelay >= currentTime) {
+    return;
+  }
+  lastBroadcastTime = currentTime;
+  
+  Serial.println("Broadcasting Message");
+  IPAddress ipBroadCast(192, 168, 1, 255);
+  unsigned int udpRemotePort=2391;
+  unsigned int udplocalPort=2390;
+  char udpBuffer[96];
+  String message =  "{\"name\": \"Garage Server\",\"ip\": \"" + ipToString(server->LocalIP) + "\"}" ; 
+  
+  strcpy(udpBuffer, message.c_str()); 
+  udp.beginPacket(ipBroadCast, udpRemotePort);
+  udp.write(udpBuffer, sizeof(udpBuffer));
+  udp.endPacket();
+  Serial.println("Broadcast Complete");
+}
