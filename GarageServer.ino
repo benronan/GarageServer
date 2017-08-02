@@ -24,6 +24,7 @@ void loop() {
   delay(10);
   server->HandleClient();
   broadcast();
+  multicast();
 }
 
 void InitServer() {
@@ -106,7 +107,7 @@ bool is_authenticated(){
 */
 WiFiUDP udp;
 long lastBroadcastTime = 0;
-long broadcastDelay = 10000;
+long broadcastDelay = 20000;
 void broadcast() {
   long currentTime = millis();
   if(lastBroadcastTime + broadcastDelay >= currentTime) {
@@ -126,4 +127,25 @@ void broadcast() {
   udp.write(udpBuffer, sizeof(udpBuffer));
   udp.endPacket();
   Serial.println("Broadcast Complete");
+}
+
+long lastMulticastTime = 0;
+int multicastDelay = 10000;
+void multicast() {
+  long currentTime = millis();
+  if(lastMulticastTime + multicastDelay >= currentTime) {
+    return;
+  }
+  lastMulticastTime = currentTime;
+  
+  Serial.println("Sending Multicast Message");
+  IPAddress ipMulticast(224, 0, 0, 250);
+  unsigned int port = 8266;
+  String message =  "{\"device\": \"ESP8266\",\"name\": \"Garage Server\",\"ip\": \"" + ipToString(server->LocalIP) + "\"}" ; 
+  
+  udp.beginPacket(ipMulticast, port);
+  udp.write(message);
+  udp.endPacket();
+  
+  Serial.println("Multicast Complete");
 }
