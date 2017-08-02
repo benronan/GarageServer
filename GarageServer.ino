@@ -5,7 +5,6 @@
 //global variables
 String BSSID = "Garage";
 String Networks[][2] = {
-  {"Pcola_Heazy", "pensacola"}
 };
 
 
