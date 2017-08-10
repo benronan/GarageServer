@@ -5,7 +5,7 @@
 
 //global variables
 String BSSID = "esp_garage";
-String OTA_PASSWORD = "ronan";
+String OTA_PASSWORD = "password";
 String Networks[][2] = {
 };
 GarageServer *server;
